@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GoldClicker V0</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="top-bar">
+    <h1>GoldClicker V0</h1>
+    <div class="stats">
+      <div class="stat">
+        <span class="label">Or</span>
+        <span id="goldDisplay" class="value">0</span>
+      </div>
+      <div class="stat">
+        <span class="label">Or / clic</span>
+        <span id="gpcDisplay" class="value">0</span>
+      </div>
+      <div class="stat">
+        <span class="label">Or / sec</span>
+        <span id="gpsDisplay" class="value">0</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="card action">
+      <h2>Extraction</h2>
+      <p>Cliquez pour miner plus d'or.</p>
+      <div class="mine-area" id="mineArea">
+        <button id="mineButton" class="primary">Miner</button>
+      </div>
+      <div class="controls">
+        <button id="saveButton" class="ghost">Sauvegarder</button>
+        <button id="resetButton" class="danger ghost">Réinitialiser</button>
+      </div>
+    </section>
+
+    <section class="card shop">
+      <h2>Boutique</h2>
+      <div class="shop-item" data-upgrade="pickaxe">
+        <div>
+          <h3>Pioche</h3>
+          <p>+1 or/clic par niveau.</p>
+          <p class="info">Coût actuel : <span class="cost" id="pickaxeCost">15</span></p>
+          <p class="info">Niveau : <span id="pickaxeLevel">0</span></p>
+        </div>
+        <button class="secondary buy-btn" data-upgrade="pickaxe">Acheter</button>
+      </div>
+      <div class="shop-item" data-upgrade="miner">
+        <div>
+          <h3>Mineur</h3>
+          <p>+1 or/sec par achat.</p>
+          <p class="info">Coût actuel : <span class="cost" id="minerCost">100</span></p>
+          <p class="info">Quantité : <span id="minerCount">0</span></p>
+        </div>
+        <button class="secondary buy-btn" data-upgrade="miner">Acheter</button>
+      </div>
+      <div class="shop-item" data-upgrade="drill">
+        <div>
+          <h3>Foreuse</h3>
+          <p>+10 or/sec par achat.</p>
+          <p class="info">Coût actuel : <span class="cost" id="drillCost">1200</span></p>
+          <p class="info">Quantité : <span id="drillCount">0</span></p>
+        </div>
+        <button class="secondary buy-btn" data-upgrade="drill">Acheter</button>
+      </div>
+    </section>
+
+    <section class="card achievements">
+      <h2>Succès</h2>
+      <p>Atteignez des paliers d'or pour débloquer des badges.</p>
+      <ul id="achievementList" class="badge-list"></ul>
+    </section>
+  </main>
+
+  <div id="toastContainer" class="toasts"></div>
+
+  <script src="game.js"></script>
+</body>
+</html>
