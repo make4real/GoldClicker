@@ -30,7 +30,10 @@
       <h2>Extraction</h2>
       <p>Cliquez pour miner plus d'or.</p>
       <div class="mine-area" id="mineArea">
-        <button id="mineButton" class="primary">Miner</button>
+        <button id="mineButton" class="primary mine-btn">
+          <span class="icon">🥇</span>
+          <span>Miner</span>
+        </button>
       </div>
       <div class="controls">
         <button id="saveButton" class="ghost">Sauvegarder</button>
@@ -44,8 +47,8 @@
         <div>
           <h3>Pioche</h3>
           <p>+1 or/clic par niveau.</p>
-          <p class="info">Coût actuel : <span class="cost" id="pickaxeCost">15</span></p>
-          <p class="info">Niveau : <span id="pickaxeLevel">0</span></p>
+          <p class="info">Coût actuel : <span class="cost" data-cost="pickaxe">15</span></p>
+          <p class="info">Niveau : <span class="count" data-count="pickaxe">0</span></p>
         </div>
         <button class="secondary buy-btn" data-upgrade="pickaxe">Acheter</button>
       </div>
@@ -53,8 +56,8 @@
         <div>
           <h3>Mineur</h3>
           <p>+1 or/sec par achat.</p>
-          <p class="info">Coût actuel : <span class="cost" id="minerCost">100</span></p>
-          <p class="info">Quantité : <span id="minerCount">0</span></p>
+          <p class="info">Coût actuel : <span class="cost" data-cost="miner">100</span></p>
+          <p class="info">Quantité : <span class="count" data-count="miner">0</span></p>
         </div>
         <button class="secondary buy-btn" data-upgrade="miner">Acheter</button>
       </div>
@@ -62,10 +65,37 @@
         <div>
           <h3>Foreuse</h3>
           <p>+10 or/sec par achat.</p>
-          <p class="info">Coût actuel : <span class="cost" id="drillCost">1200</span></p>
-          <p class="info">Quantité : <span id="drillCount">0</span></p>
+          <p class="info">Coût actuel : <span class="cost" data-cost="drill">1200</span></p>
+          <p class="info">Quantité : <span class="count" data-count="drill">0</span></p>
         </div>
         <button class="secondary buy-btn" data-upgrade="drill">Acheter</button>
+      </div>
+      <div class="shop-item" data-upgrade="refinery">
+        <div>
+          <h3>Raffinerie</h3>
+          <p>+25 or/sec par achat.</p>
+          <p class="info">Coût actuel : <span class="cost" data-cost="refinery">9000</span></p>
+          <p class="info">Quantité : <span class="count" data-count="refinery">0</span></p>
+        </div>
+        <button class="secondary buy-btn" data-upgrade="refinery">Acheter</button>
+      </div>
+      <div class="shop-item" data-upgrade="robot">
+        <div>
+          <h3>Robot foreur</h3>
+          <p>+50 or/sec par achat.</p>
+          <p class="info">Coût actuel : <span class="cost" data-cost="robot">35000</span></p>
+          <p class="info">Quantité : <span class="count" data-count="robot">0</span></p>
+        </div>
+        <button class="secondary buy-btn" data-upgrade="robot">Acheter</button>
+      </div>
+      <div class="shop-item" data-upgrade="quantum">
+        <div>
+          <h3>Extracteur quantique</h3>
+          <p>+200 or/sec par achat.</p>
+          <p class="info">Coût actuel : <span class="cost" data-cost="quantum">150000</span></p>
+          <p class="info">Quantité : <span class="count" data-count="quantum">0</span></p>
+        </div>
+        <button class="secondary buy-btn" data-upgrade="quantum">Acheter</button>
       </div>
     </section>
 

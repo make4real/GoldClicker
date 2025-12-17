@@ -18,9 +18,12 @@ Prototype jouable en HTML/CSS/JS (sans framework) pour valider le gameplay de Go
   - **Pioche** : +1 or/clic par niveau. Coût de départ 15, puis `15 * 1.15^niveau` (arrondi).
   - **Mineur** : +1 or/sec par achat. Coût de départ 100, puis `100 * 1.17^quantité`.
   - **Foreuse** : +10 or/sec par achat. Coût de départ 1200, puis `1200 * 1.22^quantité`.
+  - **Raffinerie** : +25 or/sec par achat. Coût 9000, progression `* 1.2`.
+  - **Robot foreur** : +50 or/sec par achat. Coût 35 000, progression `* 1.22`.
+  - **Extracteur quantique** : +200 or/sec par achat. Coût 150 000, progression `* 1.28`.
 - Achats : seulement si l'or couvre le coût, sinon petit feedback visuel.
 - Paliers (succès) : 100, 1 000, 10 000, 100 000 or. Notification toast + badge.
-- Effets : pop "+X" sur le clic, animation sur achat réussi, shake sur achat impossible.
+- Effets : pop "+X" sur le clic, particules et glow sur actions, animation sur achat réussi, shake sur achat impossible.
 
 ## Sauvegarde & reprise
 
@@ -28,7 +31,7 @@ Prototype jouable en HTML/CSS/JS (sans framework) pour valider le gameplay de Go
 - Clé : `goldclicker_save_v0` dans `localStorage`.
 - Format JSON stable :  
   ```json
-  { "gold": 0, "pickaxeLevel": 0, "minerCount": 0, "drillCount": 0, "lastSavedAt": 0 }
+  { "gold": 0, "pickaxeLevel": 0, "minerCount": 0, "drillCount": 0, "refineryCount": 0, "robotCount": 0, "quantumCount": 0, "lastSavedAt": 0 }
   ```
 - Bouton **Réinitialiser** avec confirmation.
 - Progression hors ligne : au chargement, ajoute `min(temps_absent, 4h) * goldPerSecond`.

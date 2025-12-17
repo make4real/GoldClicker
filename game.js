@@ -12,19 +12,46 @@ const CONFIG = {
   milestones: [100, 1_000, 10_000, 100_000],
   upgrades: {
     pickaxe: {
+      stateKey: 'pickaxeLevel',
+      mode: 'click',
+      increment: 1,
       baseCost: 15,
       costMultiplier: 1.15,
-      clickIncrement: 1,
     },
     miner: {
+      stateKey: 'minerCount',
+      mode: 'gps',
+      increment: 1,
       baseCost: 100,
       costMultiplier: 1.17,
-      gpsIncrement: 1,
     },
     drill: {
+      stateKey: 'drillCount',
+      mode: 'gps',
+      increment: 10,
       baseCost: 1200,
       costMultiplier: 1.22,
-      gpsIncrement: 10,
+    },
+    refinery: {
+      stateKey: 'refineryCount',
+      mode: 'gps',
+      increment: 25,
+      baseCost: 9000,
+      costMultiplier: 1.2,
+    },
+    robot: {
+      stateKey: 'robotCount',
+      mode: 'gps',
+      increment: 50,
+      baseCost: 35000,
+      costMultiplier: 1.22,
+    },
+    quantum: {
+      stateKey: 'quantumCount',
+      mode: 'gps',
+      increment: 200,
+      baseCost: 150000,
+      costMultiplier: 1.28,
     },
   },
 };
@@ -38,16 +65,21 @@ const CONFIG = {
  * @returns {{goldPerClick:number, goldPerSecond:number, nextCosts: Record<string, number>}}
  */
 function computeDerived(state) {
-  const goldPerClick = CONFIG.baseGoldPerClick + state.pickaxeLevel * CONFIG.upgrades.pickaxe.clickIncrement;
-  const goldPerSecond =
-    state.minerCount * CONFIG.upgrades.miner.gpsIncrement +
-    state.drillCount * CONFIG.upgrades.drill.gpsIncrement;
+  let goldPerClick = CONFIG.baseGoldPerClick;
+  let goldPerSecond = 0;
+  const nextCosts = {};
 
-  const nextCosts = {
-    pickaxe: Math.round(CONFIG.upgrades.pickaxe.baseCost * Math.pow(CONFIG.upgrades.pickaxe.costMultiplier, state.pickaxeLevel)),
-    miner: Math.round(CONFIG.upgrades.miner.baseCost * Math.pow(CONFIG.upgrades.miner.costMultiplier, state.minerCount)),
-    drill: Math.round(CONFIG.upgrades.drill.baseCost * Math.pow(CONFIG.upgrades.drill.costMultiplier, state.drillCount)),
-  };
+  Object.entries(CONFIG.upgrades).forEach(([key, upgrade]) => {
+    const level = Number(state[upgrade.stateKey]) || 0;
+    const cost = Math.round(upgrade.baseCost * Math.pow(upgrade.costMultiplier, level));
+    nextCosts[key] = cost;
+
+    if (upgrade.mode === 'click') {
+      goldPerClick += level * upgrade.increment;
+    } else if (upgrade.mode === 'gps') {
+      goldPerSecond += level * upgrade.increment;
+    }
+  });
 
   return { goldPerClick, goldPerSecond, nextCosts };
 }
@@ -60,6 +92,9 @@ function computeDerived(state) {
  * @returns {{ success: boolean, cost: number, reason?: string }}
  */
 function buyUpgrade(state, type) {
+  const upgrade = CONFIG.upgrades[type];
+  if (!upgrade) return { success: false, cost: 0, reason: 'unknown' };
+
   const { nextCosts } = computeDerived(state);
   const cost = nextCosts[type];
 
@@ -68,14 +103,7 @@ function buyUpgrade(state, type) {
   }
 
   state.gold -= cost;
-
-  if (type === 'pickaxe') {
-    state.pickaxeLevel += 1;
-  } else if (type === 'miner') {
-    state.minerCount += 1;
-  } else if (type === 'drill') {
-    state.drillCount += 1;
-  }
+  state[upgrade.stateKey] = (state[upgrade.stateKey] || 0) + 1;
 
   return { success: true, cost };
 }
@@ -98,6 +126,9 @@ const defaultState = () => ({
   pickaxeLevel: 0,
   minerCount: 0,
   drillCount: 0,
+  refineryCount: 0,
+  robotCount: 0,
+  quantumCount: 0,
   lastSavedAt: Date.now(),
 });
 
@@ -117,6 +148,9 @@ function loadState() {
       pickaxeLevel: Number(parsed.pickaxeLevel) || 0,
       minerCount: Number(parsed.minerCount) || 0,
       drillCount: Number(parsed.drillCount) || 0,
+      refineryCount: Number(parsed.refineryCount) || 0,
+      robotCount: Number(parsed.robotCount) || 0,
+      quantumCount: Number(parsed.quantumCount) || 0,
       lastSavedAt: Number(parsed.lastSavedAt) || Date.now(),
     };
   } catch (e) {
@@ -135,6 +169,9 @@ function saveState(state) {
     pickaxeLevel: state.pickaxeLevel,
     minerCount: state.minerCount,
     drillCount: state.drillCount,
+    refineryCount: state.refineryCount,
+    robotCount: state.robotCount,
+    quantumCount: state.quantumCount,
     lastSavedAt: Date.now(),
   };
   state.lastSavedAt = payload.lastSavedAt;
@@ -167,19 +204,16 @@ const elements = {
   mineArea: document.getElementById('mineArea'),
   saveButton: document.getElementById('saveButton'),
   resetButton: document.getElementById('resetButton'),
-  pickaxeCost: document.getElementById('pickaxeCost'),
-  pickaxeLevel: document.getElementById('pickaxeLevel'),
-  minerCost: document.getElementById('minerCost'),
-  minerCount: document.getElementById('minerCount'),
-  drillCost: document.getElementById('drillCost'),
-  drillCount: document.getElementById('drillCount'),
   achievementList: document.getElementById('achievementList'),
   toastContainer: document.getElementById('toastContainer'),
   shopItems: document.querySelectorAll('.shop-item'),
   buyButtons: document.querySelectorAll('.buy-btn'),
+  costSpans: document.querySelectorAll('.cost'),
+  countSpans: document.querySelectorAll('.count'),
 };
 
 const unlockedMilestones = new Set();
+const pendingBadgeHighlights = new Set();
 let state = loadState();
 
 const numberFormatter = new Intl.NumberFormat('fr-FR');
@@ -208,6 +242,30 @@ function showClickPop(amount) {
   setTimeout(() => span.remove(), 800);
 }
 
+function createParticles(target, color = 'var(--accent)') {
+  const total = 12;
+  for (let i = 0; i < total; i += 1) {
+    const p = document.createElement('span');
+    p.className = 'particle';
+    p.style.background = color;
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 24 + Math.random() * 26;
+    p.style.setProperty('--tx', `${Math.cos(angle) * distance}px`);
+    p.style.setProperty('--ty', `${Math.sin(angle) * distance}px`);
+    p.style.left = '50%';
+    p.style.top = '50%';
+    target.appendChild(p);
+    setTimeout(() => p.remove(), 700);
+  }
+}
+
+function flashGlow(target) {
+  const ring = document.createElement('span');
+  ring.className = 'glow-ring';
+  target.appendChild(ring);
+  setTimeout(() => ring.remove(), 600);
+}
+
 function renderAchievements(currentGold) {
   const fragment = document.createDocumentFragment();
   CONFIG.milestones.forEach((milestone) => {
@@ -219,18 +277,23 @@ function renderAchievements(currentGold) {
   unlockedMilestones.forEach((milestone) => {
     const li = document.createElement('li');
     li.className = 'badge';
+    if (pendingBadgeHighlights.has(milestone)) {
+      li.classList.add('new');
+    }
     li.textContent = `${formatValue(milestone)} or`;
     fragment.appendChild(li);
   });
 
   elements.achievementList.innerHTML = '';
   elements.achievementList.appendChild(fragment);
+  pendingBadgeHighlights.clear();
 }
 
 function maybeTriggerMilestones(currentGold) {
   CONFIG.milestones.forEach((milestone) => {
     if (currentGold >= milestone && !unlockedMilestones.has(milestone)) {
       unlockedMilestones.add(milestone);
+      pendingBadgeHighlights.add(milestone);
       renderAchievements(currentGold);
       showToast(`Palier atteint : ${formatValue(milestone)} or !`, 'success');
     }
@@ -243,20 +306,28 @@ function render() {
   elements.gpcDisplay.textContent = formatValue(goldPerClick);
   elements.gpsDisplay.textContent = formatValue(goldPerSecond);
 
-  elements.pickaxeCost.textContent = formatValue(nextCosts.pickaxe);
-  elements.pickaxeLevel.textContent = state.pickaxeLevel;
-  elements.minerCost.textContent = formatValue(nextCosts.miner);
-  elements.minerCount.textContent = state.minerCount;
-  elements.drillCost.textContent = formatValue(nextCosts.drill);
-  elements.drillCount.textContent = state.drillCount;
+  elements.costSpans.forEach((span) => {
+    const key = span.dataset.cost;
+    span.textContent = formatValue(nextCosts[key] ?? 0);
+  });
+
+  elements.countSpans.forEach((span) => {
+    const key = span.dataset.count;
+    const upgrade = CONFIG.upgrades[key];
+    const level = state[upgrade?.stateKey] || 0;
+    span.textContent = level;
+  });
 
   elements.buyButtons.forEach((btn) => {
     const type = btn.dataset.upgrade;
     const cost = nextCosts[type];
+    const shopItem = btn.closest('.shop-item');
     if (state.gold < cost) {
       btn.classList.add('ghost');
+      shopItem?.classList.remove('affordable');
     } else {
       btn.classList.remove('ghost');
+      shopItem?.classList.add('affordable');
     }
   });
 
@@ -269,6 +340,8 @@ function bindEvents() {
     const { goldPerClick } = computeDerived(state);
     state.gold += goldPerClick;
     showClickPop(goldPerClick);
+    createParticles(elements.mineArea, 'var(--accent-2)');
+    flashGlow(elements.mineArea);
     maybeTriggerMilestones(state.gold);
     render();
   });
@@ -280,6 +353,8 @@ function bindEvents() {
       if (result.success) {
         btn.classList.add('purchased');
         setTimeout(() => btn.classList.remove('purchased'), 400);
+        createParticles(btn, 'var(--accent)');
+        flashGlow(btn.parentElement);
         maybeTriggerMilestones(state.gold);
         render();
       } else {
